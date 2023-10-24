@@ -1,0 +1,105 @@
+@startuml
+skinparam componentStyle uml2
+
+title AY Marketplace Components Diagram
+
+package "AY MP Store UI" {
+    package "Basket" {
+        package "Adidas" {
+            [Running shoes]
+        }
+        [Checkout]
+    }
+}
+
+package "SCAYLE Pay" {
+    [Payment Coordinator]
+    [PayoutDistributor]
+}
+package "PSPs" {
+        [PayPal]
+        [Klarna]
+}
+
+package "Middlewares" {
+    package "D365 Data importer" {
+        [CustomerV3]
+        [FinancialDimensions]
+    }
+    package "Validator" {
+
+    }
+    package "Reconciler" {
+        [ReconcilerLogic]
+        [MatchFinder]
+    }
+    package "Aggregator" {
+        [AggregatorLogic]
+    }
+    package "TransformerMW" {
+        [TransformerAPI]
+        package "TransformMock" {
+            [ScayleAppToAggregator]
+            [AggregatorToD365Finops]
+        }
+    }
+
+    [D365OutboundSyncer]
+    package "Persistance" <<Cloud>>{
+        [File storage]
+        [Database]
+    }
+}
+
+package "Banks" {
+    package "UserBA" {
+        [AlexTheCustomerBA]
+    }
+    package "ScayleBAs" {
+        [Escrow]
+        [ScayleFeeCollectorBA]
+    }
+    package "AY Marketplace BA" {
+        [AYCommisionBA]
+    }
+    package "Adidas BA" {
+        [AdidasBA]
+    }
+}
+package "D365 Finance" {
+    [Journals Data Entity]
+    [Customers Data Entity]
+}
+
+[Customers Data Entity] --> [CustomerV3] : Create/Update dataset according to D365
+[Checkout] --> [Payment Coordinator] : User requests for checkout
+'[Payment Coordinator] --> [PayPal]
+[Payment Coordinator] --> [Klarna] : Request for authorization
+'[PayPal] --> [AlexTheCustomerBA]
+[Klarna] --> [AlexTheCustomerBA] : Request for lock
+[Klarna] --> [Payment Coordinator] : Send Settlment file
+[Payment Coordinator] --> [File storage]: Store it
+[File storage] --> [ScayleAppToAggregator]: Try to aggregate
+[File storage] --> [ReconcilerLogic]: Try to reconcile
+[ReconcilerLogic] --> [MatchFinder]: Try to find the reference file to compare
+[MatchFinder] --> [ReconcilerLogic]: Send the reference file
+[MatchFinder] --> [File storage]: Request for matching file
+[File storage] --> [MatchFinder]: Response with the request file
+[ReconcilerLogic] --> [Database]: Store the reconciled data in SQL
+[ReconcilerLogic] --> [AggregatorLogic]: Send the reconciled data to be aggregated
+[AggregatorLogic] --> [Database]: Keep Aggregated data in SQL
+[AggregatorLogic] --> [TransformerAPI]: Send data to be transformed
+[CustomerV3] --> [TransformerAPI]: As an input for transformation and validation
+[TransformerAPI] --> [D365OutboundSyncer]: Zip and send the result to D365 FinOps
+[TransformerAPI] --> [ReconcilerLogic]: After transform, try to reconcile
+[TransformerAPI] -> [AggregatorToD365Finops]: Choose D365 FinOps template for transforming
+[AggregatorToD365Finops] --> [TransformerAPI]: Respond with result of transforming
+[TransformerAPI] --> [ScayleAppToAggregator]: Choose ScayleApp pre-transform template
+[ScayleAppToAggregator] --> [TransformerAPI]: Respond with result of transforming 
+[D365OutboundSyncer] --> [Journals Data Entity]: Send the result to D365 FinOps as journals
+
+[Klarna] --> [Escrow]: Klarna puts the withdrawn money into Escrow
+[PayoutDistributor] --> [ScayleFeeCollectorBA]: Distriubute the fee
+[PayoutDistributor] --> [AYCommisionBA]: Distribute the commission
+[PayoutDistributor] --> [AdidasBA]: Distribute the sale amount
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+title Payment Process Sequence Diagram
+
+actor Customer as Customer
+participant "Process 1" as Process1
+participant "Process 2" as Process2
+participant "Process 3" as Process3
+participant "Final Recipient" as FinalRecipient
+
+Customer -> Process1: 1000 Euros
+activate Process1
+Process1 -> Process2: Deduct 100 Euros
+activate Process2
+Process2 -> Process3: Deduct 50 Euros
+activate Process3
+Process3 -> FinalRecipient: 850 Euros
+activate FinalRecipient
+deactivate FinalRecipient
+Process3 --> Process2: 50 Euros
+deactivate Process3
+Process2 --> Process1: 50 Euros
+deactivate Process2
+Process1 --> Customer: 950 Euros
+deactivate Process1
+
+@enduml

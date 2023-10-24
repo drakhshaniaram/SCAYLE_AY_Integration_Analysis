@@ -1,0 +1,156 @@
+@startuml
+skinparam componentStyle uml2
+title AY Marketplace Components Diagram
+
+
+'-------------------------------------------------
+'-----------   Definations  ----------------------
+'-------------------------------------------------
+
+package "AY MP Store UI" #AA6DFF{
+    package "Basket" {
+        package "Adidas" {
+            [Running shoes]
+        }
+        [Checkout]
+    }
+}
+
+package "SCAYLE Pay" #D50000{
+    [Payment Coordinator]
+    [PayoutDistributor]
+    [TransactionsCollectorAPI]
+}
+node "PSPs" #FF4081{
+        [Klarna]
+}
+
+package "Middlewares" #5094FC{
+    package "Ingress API" #6B92FF{
+        [Authenticator]
+        [Rate limiter]
+        [FlowManager]
+        [Validator]
+    }
+    package "D365 Data importer" {
+        [CustomerV3]
+        [FinancialDimensions]
+    }
+    package "Reconciler" #00C853 {
+        [ReconcilerLogic]
+        [MatchFinder]
+    }
+    package "Aggregator" #FF6F00 {
+        [AggregatorLogic]
+    }
+    package "TransformerMiddlewares" #FFD600{
+        [TransformerAPI]
+        package "TransformTemplates" {
+            [FromScayleAppFormat]
+            [ToD365Format]
+        }
+    }
+
+    [D365OutboundSyncer]
+    package "Persistance" #MediumPurple{
+        package "File storage" #SkyBlue {
+            node "UploaderAPI"
+            node "FileFinderAPI"
+            package "Transactions files containers" #Gray{
+                ["CustomerBA_SettlmentFiles\n<<ScaylePay transactions will be used instead>>"]
+                [AYCommissionBA_SettlmentFIles]
+                [MerchantBA_SettlmentFiles]
+                [ScayleEscrowBA_SettlmentFiles]
+                [ScayleFeeBA_SettlmentFiles]
+                [Scayle transactions container]
+            }
+            cloud NewFileEvent #Yellow
+        }
+        database "Database" #LightSlateGray
+    }
+}
+
+package "Banks" #D19682{
+    package "UserBA" {
+        [AlexTheCustomerBA_Mock]
+    }
+    package "ScayleBAs" {
+        [Escrow]
+        [ScayleFeeCollectorBA]
+    }
+    package "AY Marketplace BA" {
+        [AYCommisionBA]
+    }
+    package "Adidas BA" {
+        [AdidasBA]
+    }
+}
+package "D365 Finance" #00BFA5{
+    [Journals Data Entity]
+    [Customers Data Entity]
+}
+
+'-------------------------------------------------
+'-----------   Relations  ------------------------
+'-------------------------------------------------
+'Syncing D365 with middlewares
+[Customers Data Entity] -down-> [CustomerV3]
+
+'User checking out
+[Checkout] --> [Payment Coordinator]: 1. Checkout
+
+'Payment coordination
+[Payment Coordinator] -[bold]down--> [Klarna]
+[Klarna] -[bold]--> [AlexTheCustomerBA_Mock]: 2. Withdraw
+[Escrow] .d.> [TransactionsCollectorAPI]: Upload auth./captu
+[Klarna] -[bold]up--> [Payment Coordinator]
+[AlexTheCustomerBA_Mock] .d.> [TransactionsCollectorAPI]: Upload internal trans
+[Klarna] -[bold]down-> [Escrow]: 3. Deposit
+
+'Upload files to middleware
+[TransactionsCollectorAPI] -[#pink,dashed,thickness=10]-> [UploaderAPI]
+
+'Trigger business engine
+[UploaderAPI] -[#pink,dashed,thickness=10]u-> [NewFileEvent] 
+[NewFileEvent] -[#pink,dashed,thickness=10]u-> [FlowManager]
+[FlowManager] <-[#pink,dashed,thickness=10]l-> [TransformerAPI]
+[FlowManager] <-[#pink,dashed,thickness=10]l-> [ReconcilerLogic]
+[FlowManager] <-[#pink,dashed,thickness=10]r-> [AggregatorLogic]
+
+
+'Business engine of middleware
+[FlowManager] .u..> [Validator]: How is it?
+[Validator] ...> [FlowManager]: Okay
+
+' Flow manager
+[FlowManager] -> [TransformerAPI]
+
+
+[ReconcilerLogic] ...> [MatchFinder]
+[MatchFinder] ...> [ReconcilerLogic]
+[MatchFinder] <..> [FileFinderAPI]
+[ReconcilerLogic] --> [Database]
+[ReconcilerLogic] --> [AggregatorLogic]
+[AggregatorLogic] -u-> [Database]
+[AggregatorLogic] -r-> [TransformerAPI]
+[CustomerV3] --> [TransformerAPI]
+[TransformerAPI] -u-> [D365OutboundSyncer]
+[TransformerAPI] --> [ReconcilerLogic]
+[TransformerAPI] --> [ToD365Format]
+[ToD365Format] --> [TransformerAPI]
+[TransformerAPI] --> [FromScayleAppFormat]
+[FromScayleAppFormat] --> [TransformerAPI]
+
+'Distribution of money --> Paying out
+[Escrow] -u--> [PayoutDistributor]
+[PayoutDistributor] ---> [ScayleFeeCollectorBA]: Fees
+[ScayleFeeCollectorBA] .d.> [TransactionsCollectorAPI]: Upload
+[PayoutDistributor] ---> [AYCommisionBA]: Commisions
+[AYCommisionBA] .d.> [TransactionsCollectorAPI]: Upload
+[PayoutDistributor] ---> [AdidasBA]: Sales price
+[AdidasBA] .d.> [TransactionsCollectorAPI]: Upload
+
+'Middleware sending out the result to D365 FinOps
+[D365OutboundSyncer] -up-> [Journals Data Entity]
+
+@enduml

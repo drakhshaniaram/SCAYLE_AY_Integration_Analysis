@@ -1,0 +1,209 @@
+@startuml
+title AY Marketplace Components Diagram
+'skinparam linetype polyline
+skinparam nodesep 50
+'-------------------------------------------------
+'-----------   Definations  ----------------------
+'-------------------------------------------------
+
+package "AY MP Store UI" #AA6DFF{
+    package "Basket" {
+        package "Merchants" {
+            package "Adidas" {
+                component [RunningShoes]
+            }
+        }
+        component [Checkout]
+    }
+}
+
+package "SCAYLE Pay" #D50000{
+    component [PaymentCoordinator]
+    component [PayoutDistributor]
+    component [TransactionsCollectorAPI]
+    component [EscrowBalanceManagerAPI]
+}
+node "PSPs" #FF4081{
+        component [Klarna]
+}
+
+package "Middlewares" #5094FC{
+    package "Ingress API" #OldLace{
+        node FlowOrchestrator #Tomato
+        node "UploaderAPI" #Peru
+        cloud NewFileEvent_Subscriber #Yellow
+        node "DeliveryManager" {
+            node "Queue"
+        }
+        component [DataPersister]
+        component [Authenticator]
+        component [Rate limiter]
+        component [Validator] 
+    }
+    package "DataImporter" #CadetBlue{
+        frame "MasterData" {
+            component [MasterDataImporterAPI]
+            component [RetrieveMasterDataAPI]
+        }
+    }
+    
+    package "Reconciler" #00C853 {
+        component [ReconcilerAPI]
+        package "MatchFinderLogic" {
+            component [MatchFinderAPI]
+            component [MatchFindingRules]
+            package "MatchFindinfConfigs" {
+                component [DatabaseSource]
+                component [FileSystemSource]
+            }
+        }
+    }
+    package "Aggregator" #FF6F00 {
+        component [AggregatorAPI]
+        component [AggregatingRules]
+    }
+    package "Transformer" #FFD600{
+        component [TransformerAPI]
+        component [TransformingRules]
+        component [TransformingMaps]
+    }
+    package "ResultGenerator" #OliveDrab{
+        component [ResultGeneratorAPI]
+        component [ResultGeneratingRules]
+        frame "ResultTemplates" {
+            component [GL_Jour]
+            component [GL_Jour_Reversal]
+            component [Invoice]
+            component [FreeTextInvoice]
+            component [CreditNote]
+        }
+    }
+}
+package "<color:white>Persistance" #DarkMagenta {
+    package "File storage" #SkyBlue {
+        node "UploaderAgent"
+        package "Transactions files containers" #Gray{
+            folder CustomerBA_Folder {
+                component [CustomerBA_SetlmentFiles]
+
+            }
+            folder AYCommissionBA_Folder {
+                component [AYCommision_SettlmentFiles]
+            }
+            folder MerchantBA_Folder {
+                component [MerchantBA_SettlmentFiles]
+            }
+            folder ScayleEscrowBA_Folder {
+                component [ScayleEscrowBA_SettlmentFiles]
+            }
+            folder ScayleFeeBA_Folder {
+                component [ScayleFeeBA_SettlmentFiles]
+            }
+            folder ScayleTrans_Folder {
+                component [ScayleTrans_Files]
+            }
+        }
+        cloud NewFileEvent_Publisher #Yellow
+    }
+    database "Database" #Salmon
+    package "DataIntegrationBlob" #MediumSpringGreen {
+        component [D365FinOpsERP_Outbound_Storage]
+    }
+}
+
+package "BankTransactionManagerAPI" #D19682{
+    node "TransactionGenerator"<<SettlmentFile generator>> #Khaki
+    package "UserBA" {
+        component [AlexTheCustomerBA_Mock]
+    }
+    package "ScayleBA.s" {
+        component [EscrowBA]
+        component [ScayleFeeCollectorBA]
+    }
+    package "Marketplaces BA.s" {
+        package "AYMPC" {
+            component [AYCommisionBA]
+        }
+    }
+    package "Merchants BA.s" {
+        component [AdidasBA]
+    }
+}
+package "D365 Finance ERP System" #MediumSlateBlue{
+    package "Data management framework" {
+        component [JournalsDataEntity]
+        component [CustomersDataEntity]
+    }
+}
+
+package "DataIntegrator" #BurlyWood{
+    cloud RecurringIntegrator
+}
+'-------------------------------------------------
+'-----------   Relations  ------------------------
+'-------------------------------------------------
+'Before middleware layer
+Checkout -[#FireBrick,dotted,thickness=20]-> PaymentCoordinator: Starting point
+PaymentCoordinator -[#FireBrick,dotted,thickness=20]u-> Klarna
+Klarna -l-> AlexTheCustomerBA_Mock
+AlexTheCustomerBA_Mock .[#Cyan,dotted,thickness=10].> TransactionGenerator
+Klarna --> EscrowBA
+EscrowBA .[#Cyan,dotted,thickness=10].> TransactionGenerator
+'(Monthly batch job) --> PayoutDistributor
+PayoutDistributor ..> EscrowBalanceManagerAPI
+EscrowBalanceManagerAPI .> AYCommisionBA
+AYCommisionBA .[#Cyan,dotted,thickness=10].> TransactionGenerator
+EscrowBalanceManagerAPI .> AdidasBA
+EscrowBalanceManagerAPI .d.> ScayleFeeCollectorBA
+ScayleFeeCollectorBA .[#Cyan,dotted,thickness=10].> TransactionGenerator
+AdidasBA .[#Cyan,dotted,thickness=10].> TransactionGenerator
+TransactionGenerator -[#GreenYellow,dashed,thickness=10]-> TransactionsCollectorAPI: Settlment/\nTransaction files
+TransactionsCollectorAPI -[#GreenYellow,dashed,thickness=10]-> UploaderAPI: A
+
+
+'Integration layer
+CustomersDataEntity -[bold]u-> MasterDataImporterAPI
+
+'Business process engine
+UploaderAPI -[#GreenYellow,dashed,thickness=10]> UploaderAgent: B
+UploaderAgent -[#GreenYellow,dashed,thickness=10]l-> NewFileEvent_Publisher: C
+NewFileEvent_Publisher -[#gold,thickness=10]> NewFileEvent_Subscriber: D
+NewFileEvent_Subscriber -[#gold,thickness=10]-> Queue: E
+Queue -[#gold,thickness=10]->FlowOrchestrator: E
+FlowOrchestrator <--[#pink,dashed,thickness=10]-> RetrieveMasterDataAPI
+FlowOrchestrator <--[#pink,dashed,thickness=10]-> TransformerAPI: F
+FlowOrchestrator <---[#pink,dashed,thickness=10]-> ReconcilerAPI: G
+FlowOrchestrator <----[#pink,dashed,thickness=10]-> AggregatorAPI: H
+FlowOrchestrator -[#Lavender,dashed,thickness=10]-> DataPersister: Saves F,G,H results in DB
+DataPersister -[#Lavender,dashed,thickness=10]-> Database
+
+'Result
+FlowOrchestrator ----[#pink,dashed,thickness=10]--> ResultGeneratorAPI: I
+FlowOrchestrator -[#pink,dashed,thickness=10]-> D365FinOpsERP_Outbound_Storage: J
+D365FinOpsERP_Outbound_Storage -[#DodgerBlue,dashed,thickness=10]-> RecurringIntegrator: K
+RecurringIntegrator -[#DodgerBlue,dashed,thickness=10]-> JournalsDataEntity: L
+'(Daily batch job) -> RecurringIntegrator: M
+
+'Hidden links
+'--- Folders
+ScayleTrans_Files -[hidden]d- ScayleFeeBA_SettlmentFiles
+MerchantBA_SettlmentFiles -[hidden]d- ScayleTrans_Files
+ScayleEscrowBA_SettlmentFiles -[hidden]d- AYCommision_SettlmentFiles
+AYCommision_SettlmentFiles -[hidden]d- CustomerBA_SetlmentFiles
+JournalsDataEntity -[hidden]- D365FinOpsERP_Outbound_Storage
+NewFileEvent_Publisher -[hidden]d- D365FinOpsERP_Outbound_Storage
+UploaderAgent -[hidden]d- NewFileEvent_Publisher
+'--- Flow
+FlowOrchestrator -[hidden]d- TransformerAPI
+TransformerAPI -[hidden]d- ReconcilerAPI
+ReconcilerAPI -[hidden]d- AggregatorAPI
+AggregatorAPI -[hidden]d- ResultGeneratorAPI
+RetrieveMasterDataAPI -[hidden]l- TransformerAPI
+RetrieveMasterDataAPI -[hidden]d- TransformerAPI
+NewFileEvent_Subscriber -[hidden]d- Queue
+DataPersister -[hidden]u- Queue
+'--- Banks
+AlexTheCustomerBA_Mock -[hidden]d- EscrowBA
+EscrowBA -[hidden]d- AYCommisionBA
+AYCommisionBA -[hidden]d- AdidasBA
+@enduml

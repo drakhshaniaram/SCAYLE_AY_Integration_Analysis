@@ -1,0 +1,46 @@
+@startuml
+start
+
+fork
+  :Scenario A;
+  if (Condition A) then (yes)
+    :Action A1;
+  else (no)
+    :Action A2;
+  endif
+fork again
+  :Scenario B;
+  if (Condition B) then (yes)
+    :Action B1;
+  else (no)
+    :Action B2;
+  endif
+fork again
+  :Scenario C;
+  if (Condition C) then (yes)
+    :Action C1;
+  else (no)
+    :Action C2;
+  endif
+end fork
+
+:Common Action;
+
+fork
+  if (Additional Condition 1) then (yes)
+    :Additional Action 1;
+  else (no)
+    :Additional Action 2;
+  endif
+fork again
+  if (Additional Condition 2) then (yes)
+    :Additional Action 3;
+  else (no)
+    :Additional Action 4;
+  endif
+end fork
+
+:Final Action;
+stop
+
+@enduml

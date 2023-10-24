@@ -1,0 +1,17 @@
+Service category,Service type,Custom name,Region,Description,Estimated monthly cost,Estimated upfront cost
+Databases,Azure Cosmos DB,Logs,Germany West Central,"Azure Cosmos DB for NoSQL (formerly Core), Serverless, Always-free quantity disabled, Single Region Write (Single-Master), 325 million RUs, 100 GB transactional storage, Analytical storage disabled, 2 copies of periodic backup storage, Dedicated gateway not enabled",€112.93,€0.00
+Databases,Azure SQL Database,Persistance,Germany West Central,"Single Database, vCore, General Purpose, Serverless, Standard-series (Gen 5), Locally Redundant, 8 Billed vCores, 100 GB Storage, RA-GRS Back up Storage Redundancy, 100 GB Point-In-Time Restore,  52 x 10 GB Long Term Retention",€73.92,€0.00
+Storage,Storage Accounts,Hot Storage,Germany West Central,"Data Lake Storage Gen2, Premium, LRS Redundancy, Hierarchical Namespace File Structure, 32 GB Capacity, Write operations: 4 MB x 10 operations, Read operations: 4 10 x MB operations, 10 Iterative read operations, 10 Iterative write operations, 10 Other operations,",€6.53,€0.00
+Storage,Storage Accounts,Archive,Germany West Central,"Data Lake Storage Gen2, Premium, LRS Redundancy, Hierarchical Namespace File Structure, 96 GB Capacity, Write operations: 4 MB x 10 operations, Read operations: 4 10 x MB operations, 10 Iterative read operations, 10 Iterative write operations, 10 Other operations,",€17.88,€0.00
+Storage,Storage Accounts,D365 Docs,Germany West Central,"Data Lake Storage Gen2, Premium, LRS Redundancy, Hierarchical Namespace File Structure, 32 GB Capacity, Write operations: 4 MB x 10 operations, Read operations: 4 10 x MB operations, 10 Iterative read operations, 10 Iterative write operations, 10 Other operations,",€6.53,€0.00
+Databases,Azure Cache for Redis,MasterData,Germany West Central,Standard tier; 1 C0 instances x 730 Hours,€36.53,€0.00
+Compute,Azure Functions,ValidateorAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,UploaderAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,DownloaderAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,TransformerAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,ReconcilerAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,GeneratorAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Compute,Azure Functions,SaverAPI,Germany West Central,"Consumption tier, Pay as you go, 1024 MB memory, 2 milliseconds execution time, 5,500,000 executions/mo",€0.91,€0.00
+Internet of Things,Event Grid,Orchestrator,Germany West Central,"107,999,960 operations per month",€58.90,€0.00
+Web,API Management,,East US,"Developer tier, 10 unit(s) x 730 Hours; Self-hosted Gateways, 10 Gateways x 730 Hours, 1 x 730 Hours x 5 workspaces",€437.01,€0.00
+Support,,,,,€90.98,€0.00

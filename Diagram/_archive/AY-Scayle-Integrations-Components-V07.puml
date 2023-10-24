@@ -1,0 +1,893 @@
+@startuml SCAYLE_AY_V07
+allowmixing
+title AY Marketplace Components Diagram
+skinparam actorStyle awesome
+together Quesitons{
+    /'
+    TODOS:
+    --------
+    Non technical quesitons:
+    14- Is this system scalable, as the # of trans grows?
+    15- Does this system offer real time processing? e.g. Immediate updates to acocunt balances and trans status
+    19- Are settlings and clearings between parties also possible?
+    20- Is a robust error handling and failure recovery in place?
+    22- Concurrency and Consistency: Does system handle concurrent transactions and maintain data consistency across distributed systems?
+    --------
+    27- (Scalability)Are scaling mechanisms like load balancers and auto-scaling used effectively?
+    28- (Scalability)How well does the system maintain performance under heavy loads?
+    29- (Reliability)Are there mechanisms in place to handle and recover from failures gracefully?
+    30- (Performance)Are there any performance bottlenecks in the system, and how are they addressed?
+    32- (Extendibility)How easily can new features or functionalities be added to the system?
+    33- (Extendibility)Are there well-defined extension points and APIs for integration?
+    34- (Testability)How easy is it to test individual components in isolation?
+    35- (Testability)Are there automated test suites covering critical functionalities?
+    36- (Cost)How cost-effective is the architecture in terms of infrastructure and maintenance?
+    37- (Cost)Are there any opportunities to optimize costs without sacrificing performance or reliability?
+    '/
+}
+together Ideas{
+    /'
+    !$data= {"parts":
+        [
+            {"shape": "cloud",    "name": "id1", "colour": "#palegreen", "desc": "some text"},
+            {"shape": "folder",   "name": "id2", "colour": "#lightblue", "desc": "more text"},
+            {"shape": "database", "name": "id3", "colour": "#pink",      "desc": "even more text"}
+        ]
+    }
+    rectangle Outer {
+        rectangle Inner #tan as "
+            {
+                {
+                    json $data
+                }
+            }"
+    }
+    '/
+}
+together PreProcesses{
+    !$nowDT = %date("yyyy.MM.dd' at 'HH:mm")
+    !$SALE = {"Total": 1000}
+    !$PSP = {"FeeRate": 1, "FeeValue": 10, "TaxRate": 20, "TaxValue": 2}
+    !$SCAYLE = {"FeeRate": 2, "FeeValue": 20, "TaxCode": "VAT", "TaxRate": 20, "TaxValue": 4}
+    !$MP = {"CommissionRate": 7, "CommissionValue": 70, "TaxCode": "VAT", "TaxRate": 20, "TaxValue": 14}
+    !$MERCHANT = {"SaleCutRate": 90, "SaleValue": 900}
+    together calcFuncs{
+        together SC_Funcs{
+            !function $SC_Assets()
+                !$a = %intval($SALE.Total)
+                !return $a
+            !endfunction
+
+            !function $SC_Liabilities()
+                !$a = %intval($PSP.FeeValue)
+                !$b = %intval($MP.CommissionValue)
+                !$c = %intval($SCAYLE.TaxValue)
+                !$d = %intval($MERCHANT.SaleValue)
+                !return $a + $b + $c + $d
+            !endfunction
+
+            !function $SC_Equities()
+                !return $SC_Assets()-$SC_Liabilities()
+            !endfunction
+        }
+        together MP_Funcs{
+            !function $MP_Assets()
+                !$a = %intval($MP.CommissionValue)
+                !return $a
+            !endfunction
+
+            !function $MP_Liabilities()
+                !$a = %intval($MP.TaxValue)
+                !return $a
+            !endfunction
+
+            !function $MP_Equities()
+                !return $MP_Assets()-$MP_Liabilities()
+            !endfunction
+        }
+        !function $PSP_Payout()
+            !$a = %intval($SALE.Total)
+            !$b = %intval($PSP.FeeValue)
+            !return $a-$b
+        !endfunction
+    }
+
+
+}
+together Definiations{
+    actor AlexTheCustomer
+    package "AY MP Store UI" #AA6DFF{
+        package "Basket<&basket>" {
+            package "Merchants" {
+                package "AdidasTheMerchant" {
+                    object RunningShoes{
+                        <img:https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/2a933a19fc8b468a9c82af9c00ed602b_9366/Adistar_2.0_Running_Shoes_Red_HP5644_011_hover_standard.jpg{scale=0.2}>
+                        =Price: 1000 euro
+                        |_ 19% vat included
+                    }
+                }
+            }
+            component [Checkout]
+        }
+    }
+    node "PSPs" #FF4081{
+        package Klarna #PaleVioletRed{
+            component Klarna_Authorize_Issuer{
+                file {
+                    json MarketPlace_SettlmentLine1<<Authorization>> {
+                        "operation_key": "82eafcb9",
+                        "operation_timestamp": "2022-12-08 17:17:40",
+                        "operation_type": "authorization",
+                        "operation_value": $SALE.Total,
+                        "transaction_key": "9ce15ecf",
+                        "authorized_value": $SALE.Total,
+                        "authorized_timestamp": "2022-12-08 17:17:40",
+                        "marketplace_transaction_reference": "ALPHA-SE-002",
+                        "currency_code": "SEK",
+                        "payment_method_code": "instant_capture",
+                        "item_key": "04f4c1f2",
+                        "marketplace_item_reference": "item#279986",
+                        "item_description": "RunningShoes",
+                        "merchant_key": "5da36e89",
+                        "merchant_name": "Adidas",
+                        "merchant_country_of_origin": "DEU",
+                        "shop_key": "3b3698d3",
+                        "shop_name": "Alpha SE",
+                        "consumer_invoice_reference": "NULL",
+                        "consumer_invoice_timestamp": "",
+                        "commission_code": "NULL",
+                        "initial_value": $SALE.Total,
+                        "commission_rate": $MP.CommissionRate,
+                        "commission_value": $MP.CommissionValue,
+                        "commission_vat_rate": $MP.TaxRate,
+                        "commission_vat_value": $MP.TaxValue,
+                        "payment_fee_rate": $PSP.FeeRate,
+                        "payment_fee_value": $PSP.FeeValue,
+                        "payment_fee_vat_rate": $PSP.TaxRate,
+                        "payment_fee_vat_value": $PSP.TaxValue,
+                        "reversal_penalty": "0,00",
+                        "reversal_reason": "NULL",
+                        "payout_currency_code": "EUR",
+                        "exchange_rate": "",
+                        "custom_data": "",
+                        "payout_value": $PSP_Payout()
+                    }
+                }
+            }
+            component Klarna_Capture_Issuer{
+                file {
+                    json PSP_SettlmentTrans1<<FEE>> {
+                        "type": "FEE",
+                        "capture_date": "2022-12-11T23:06:22.000Z",
+                        "sale_date": "2022-12-05T16:50:23.168Z",
+                        "order_id": "8b2dea16-2ba3-456d-8203-f1f655a4e612",
+                        "short_order_id": "0NK4H6L6-1",
+                        "capture_id": "80157a40-5a26-467f-934e-b90c26549071",
+                        "merchant_reference1": "ayou-139-204559361",
+                        "merchant_reference2": "",
+                        "amount": $PSP.FeeValue,
+                        "posting_currency": "EUR",
+                        "refund_id": "",
+                        "purchase_country": "DE"
+                    }
+                    json PSP_SettlmentTrans2<<Sale>>{
+                        "type": "SALE",
+                        "capture_date": "2022-12-11T23:06:22.000Z",
+                        "sale_date": "2022-12-05T16:50:23.168Z",
+                        "order_id": "8b2dea16-2ba3-456d-8203-f1f655a4e612",
+                        "short_order_id": "0NK4H6L6-1",
+                        "capture_id": "80157a40-5a26-467f-934e-b90c26549071",
+                        "merchant_reference1": "ayou-139-204559361",
+                        "merchant_reference2": "",
+                        "amount": $PSP_Payout(),
+                        "posting_currency": "EUR",
+                        "refund_id": "",
+                        "purchase_country": "DE"
+                    }
+                }
+            }
+            component Klarna_Void_Issuer
+            component Klarna_Return_Issuer
+        }
+    }
+    package "SCAYLEPay" #SpringGreen{
+        object Refrences{
+            =Fees, Taxes, Commissions
+            |= |=  Klarna fee  |=  Scayle fee  |=  MP commission |=  ScaylePay VAT  |= AY MP VAT |= PSP VAT |= Merchants VAT |
+            <#lightgreen>| Refrence | $PSP.FeeRate  | $SCAYLE.FeeRate | $MP.CommissionRate | $SCAYLE.TaxRate | We don't care | We don't care | We don't care |
+            | Sample: $SALE.Total € | $PSP.FeeValue €  | $SCAYLE.FeeValue € | $MP.CommissionValue € | $SCAYLE.TaxValue € | We don't care | We don't care | We don't care |
+
+            =ExchangeRates
+            |= # |= Unit |= CurrencySource |= CurrencyDestination |= Rate |= Date |
+            | 1 | 1 | EUR | USD | 1.08 | $nowDT |
+            | 2 | 1 | GBP | EUR | 1.16 | $nowDT |
+            | 3 | 1 | EUR | JPY | 157.02 | $nowDT |
+        }
+        component PaymentCoordinator #FF4081
+        () "MonthlyBatchJob"
+        component PayoutDistributor
+        together PayoutSettlments{
+            component MarketPlacePayoutIssuer {
+                file {
+                    json MarketPlace_SettlmentLine2<<Capture>> {
+                        "operation_key": "493c887f",
+                        "operation_timestamp": "2022-12-09 18:15:16",
+                        "operation_type": "capture",
+                        "operation_value": $MP.CommissionValue,
+                        "transaction_key": "9ce15ecf",
+                        "authorized_value": $MP.CommissionValue,
+                        "authorized_timestamp": "2022-12-08 17:17:40",
+                        "marketplace_transaction_reference": "ALPHA-SE-002",
+                        "currency_code": "EUR",
+                        "payment_method_code": "instant_capture",
+                        "item_key": "04f4c1f2",
+                        "marketplace_item_reference": "item#279986",
+                        "item_description": "RunningShoes",
+                        '-----------------------------
+                        'These fields are extra
+                        "merchant_key": "5da36e89",
+                        "merchant_name": "Adidas",
+                        "merchant_country_of_origin": "DEU",
+                        '-----------------------------
+                        "shop_key": "3b3698d3",
+                        "shop_name": "Alpha SE",
+                        '-----------------------------
+                        'Invoice number differs
+                        "consumer_invoice_reference": "invoice-2023#0051",
+                        '-----------------------------
+                        "consumer_invoice_timestamp": "2022-12-09 18:00:52",
+                        "commission_code": "shirts_children",
+                        "<color:#red>initial_value": $SALE.Total,
+                        "commission_rate": $MP.CommissionRate,
+                        "commission_value": $MP.CommissionValue,
+                        "commission_vat_rate": $MP.TaxRate,
+                        "commission_vat_value": $MP.TaxValue,
+                        '------------------------------
+                        'These fields are extra
+                        "<color:#red>payment_fee_rate": $SCAYLE.FeeRate,
+                        "payment_fee_value": $SCAYLE.FeeValue,
+                        "payment_fee_vat_rate": $SCAYLE.TaxRate,
+                        "payment_fee_vat_value": $SCAYLE.TaxValue,
+                        '------------------------------
+                        "reversal_penalty": "0,00",
+                        "reversal_reason": "NULL",
+                        "payout_currency_code": "EUR",
+                        "exchange_rate": "1",
+                        "custom_data": "",
+                        "payout_value": $MP.CommissionValue
+                    }
+                }
+            }
+            component MerchantPayoutIssuer{
+                file {
+                    json MerchantTrans1<<Capture>> {
+                        "operation_key" : "338c8bd8",
+                        "operation_timestamp": "2022-12-09 21:36:52",
+                        "operation_type": "capture",
+                        "operation_amount": $MERCHANT.SaleValue,
+                        "transaction_key": "9ce15ecf",
+                        "authorized_amount": $MERCHANT.SaleValue,
+                        "authorized_timestamp": " 2022-12-08 17:17:40",
+                        "marketplace_transaction_reference": "ALPHA-SE-002",
+                        "currency_code": "EUR",
+                        "payment_method_code": "instant_capture",
+                        "item_key": "5c46693c",
+                        "marketplace_item_reference": "item#39998",
+                        "item_description": "RunningShoes",
+                        "shop_key": "3b3698d3",
+                        "shop_name": "Alpha SE",
+                        "consumer_invoice_reference": "invoice-2023#0005",
+                        "consumer_invoice_timestamp": " 2022-12-09 21:22:28",
+                        "commission_code": "shirts_children",
+                        "initial_amount": $SALE.Total,
+                        "commission_rate": $MP.CommissionRate,
+                        "commission_amount": $MP.CommissionValue,
+                        "commission_vat_rate": $MP.TaxRate,
+                        "commission_vat_amount": $MP.TaxValue,
+                        "reversal_penalty": 0,
+                        "reversal_reason": "NULL",
+                        "payout_currency_code": "EUR",
+                        "exchange_rate": 1,
+                        "custom_data": "forceclose=true",
+                        "payout_value": $MERCHANT.SaleValue
+                    }
+                }
+            }
+        }
+        component TransCollectorAPI #Peru{
+            node PSP_Settlments{
+                file PSP_Fee_Settlment
+                file PSP_Sale_Settlment
+            }
+            node SCAYLE_Pay_Settlments{
+                file MarketPlace_Payout_Settlment
+                file Merchant_Payout_Settlment
+            }
+        }
+        component EscrowBalanceManagerAPI #DarkTurquoise
+        package ScayleAuditingControlCenter #MediumPurple{
+            package Notifier{
+                component EmailNotifier
+                component SMSNotifier
+                component PushNotifier
+                component CallingNotifier
+            }
+            package Reporter{
+                component PowerBIReporter
+                component SSRSReporter
+                component ExcelReporter
+            }
+        }
+    }
+    package Cupa<<Business Spend Management>> #AliceBlue{
+        object CupaBSM{
+            <img:https://www.coupa.com/themes/coupa_8/logo.svg>
+        }
+    }
+    package "ServiceMiddlewareLayer" #5094FC{
+        package "MonitoringAndAuditing"<<Write-only>> #Chartreuse{
+            database AuditingAPI_Logs
+            node AuditingAPI
+        }
+        component EntryPoint #DarkOrchid{
+            database EntryPoint_Logs
+            object RateLimiter{
+                <img:https://cdn-icons-png.flaticon.com/128/2581/2581958.png>
+            }
+            object LoadBalancer{
+                <img:https://cdn-icons-png.flaticon.com/128/429/429121.png>
+            }
+        }
+        queue FlowOrchestrator #Tomato {
+            legend
+            = Guarantees
+            ----
+            *Exactly-once delivery
+            |_ Retry
+            |_ Idempotency check
+            end legend
+
+            portin Validate
+            portin Upload
+            portin Download
+            portin Transform
+            portin Reconcile
+            portin Aggregate
+            portin Generate
+            portin Save
+
+            portout Validated
+            portout Uploaded
+            portout Downloaded
+            portout Transformed
+            portout Reconciled
+            portout Aggregated
+            portout Generated
+            portout Saved
+            portout Log
+
+            object RoutingLogic{
+                |= RoutineID |= Source |= Direction |= Destination Node |= Next Station |= Type of op. |= Status |= Logging Individually|
+                | 1 | Validate | => | ValidatorAPI | 2 | Async | Enabled | Yes |
+                | 2 | Validated | => | Upload | 3 | Async | Enabled | Yes |
+                | 3 | Upload | => | UploaderAPI | 4 | Async | Enabled | Yes |
+                | 4 | Uploaded | => | Download | 5 | Async | Enabled | Yes |
+                | 5 | Download | => | MasterDataDownloaderAPI | 6 | Async | Enabled | Yes |
+                | 6 | Downloaded | => | Transform | 7 | Async | Enabled | Yes |
+                | 7 | Transform | => | TransformerAPI | 8 | Async | Enabled | Yes |
+                <#LightCoral>| 8 | Transformed | => | Reconcile | 9 | Async | Enabled | Yes |
+                <#LightCoral>| 9 | Reconcile | => | ReconcilerAPI | 10 | Async | Enabled | Yes |
+                <#LightCoral>| 10 | Reconciled | => | Aggregate | 11 | Async | Enabled | Yes |
+                | 11 | Aggregate | => | AggregatorAPI | 12 | Async | Enabled | Yes |
+                | 12 | Aggregated | => | Generate | 13 | Async | Enabled | Yes |
+                | 13 | Generate | => | ResultGeneratorAPI | 14 | Async | Enabled | Yes |
+                | 14 | Generated | => | Save | 15 | Async | Enabled | Yes |
+                | 15 | Save | => | ResultSaverAPI | 16 | Async | Enabled | Yes |
+                | 16 | Saved | => | Log | 0 | Async | Enabled | Yes |
+            }
+        }
+        package APIGateway #LightYellow{
+            database APIGateway_Logs
+            package UniqueIDGenerator #DimGray{
+                database UniqueIDGeneratorAPI_Logs
+                component UniqueIDGeneratorAPI
+                object NumSeqeuenceRef{
+                    |= # |= Application | Purpose |= FixedString |= NextNumber |= IncrementBy | Algorithm |
+                    | 1 | UploaderAPI | PSPSettle | psp-sc- | 000000007 | 1 | Increment |
+                    | 2 | UploaderAPI | MPSettle | sc-mp- | 000000005 | 1 | Increment |
+                    | 3 | UploaderAPI | MerchantSettle | sc-merch- | 000000004 | 1 | Increment |
+                    | 4 | AggregatorAPI | Aggregate | sc-agg- | 000000010 | 1 | Increment |
+                    | 5 | TransformerAPI | InitialTransform | sc-trans-init- | 000000017 | 1 | Increment |
+                    | 6 | TransformerAPI | FinalTransform | sc-trans-final- | 000000017 | 1 | Increment |
+                    | 7 | ResultSaverAPI | OutputFileName | sc-file-out- | 000000006 | 1 | Increment |
+                }
+            }
+            package Validator #LightCyan{
+                component ValidatorAPI
+                database Validator_Logs
+            }
+            package Uploader #Peru {
+                component UploaderAPI
+                database Uploader_Logs
+            }
+            package MasterDataDownloader #LightSeaGreen{
+                component MasterDataDownloaderAPI
+                database MasterDataDownloader_Logs
+            }
+            package Reconciler #00C853 {
+                database Reconciler_Logs
+                component [ReconcilerAPI]
+                package "MatchFinderLogic" {
+                    component [MatchFinderAPI]
+                    object MatchFindingRules {
+                        * File name --> FileNamePatternMap
+                        * Date
+                        * Filestamp
+                        * Operation key
+                        ---
+                        * JournalNum(?)
+                        ---
+                    }
+                    component FileNamesPattern {
+                        object FileNamePatternMap{
+                            = Klarna
+                            |=  |= PSP |= Merchant |= MarketPlace |
+                            | **Pattern** | ["settlments"]_[CountryCode]_["Klarna"]_[Date]_[Date].csv | ["SCAYLE PAY"]_["Marketplace"]_["Settlement"]_[Date].csv | ["SCAYLE PAY"]_["Merchant"]_["Settlement"]_[Date].csv |
+                            | **Common filters** | [Date] | [Date] | [Date] |
+                            | **Other applicable filters** | [CountryCode], [PSPName] | "SCAYLE PAY", "Marketplace" | "Merchant" |
+                        }
+                    }
+                }
+            }
+            package Aggregator #FF6F00 {
+                database Aggregator_Logs
+                component [AggregatorAPI]
+                component [AggregatingRules] {
+                    object Grouping {
+                        * MerchantCode
+                        * Date
+                    }
+                }
+            }
+            package Transformer #FFD600{
+                database Transformer_Logs
+                component [TransformerAPI]
+                component [TransformingRules]
+                component [TransformingMaps] {
+                    map intial {
+                        XML => CSV
+                        CVS => JSON
+                        AmountStr => Integer
+                        DateFormat => YY MM DD HH MM SS
+                        "operartion_value" => "OpValue"
+                        "operation_amount" => "OpValue"
+                    }
+                    map final {
+                        OpValue => NetAmount
+                        FinancialDimensionConvension => Channel-Merchant-ShopKey
+                    }
+                }
+            }
+            package ResultGenerator #OliveDrab{
+                database ResultGenerator_Logs
+                component [ResultGeneratorAPI]
+                component [ChoosingResultTemplateRules]
+                object ResultTemplates {
+                    * GL_Jour
+                    * Corrective_Jour
+                    * Customer_Invoice
+                    * FreeText_Invoice
+                    * CreditNote
+                }
+            }
+            package ResultSaver #LightCoral{
+                component ResultSaverAPI
+                database ResultSaver_Logs
+            }
+        }
+    }
+    package "<color:white>Persistance" as Persistance #DarkOrchid {
+        component UniversalTransTracker #OrangeRed{
+            database UniversalStatusDB<<NoSQL>> as"
+            =Klarna_Authorization
+            |= internal_operation_unique_id |= file_name |= Operation_key |= transaction_key |= operation_timestamp |= operation_type |= Phase |= status |= JournalNum |= Voucher |= description |= datetime |
+            | sc-file-out-000000000001 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Validation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000002 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Uplaoding | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000003 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Transformation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000004 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Reconiliation | <color:green>Succeeded |  |  | [ReferenceFileName: SCAYLE_Pay_2022_12_11.csv] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000005 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Aggregation | <color:green>Succeeded |  |  | [AggregationId: 0000000000009182] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000006 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | ResultGeneration | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000007 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | ResultPersistance | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000008 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | SendingOut | <color:green>Succeeded |  |  | [OutputFileName: sc-file-out-000000001.zip] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000009 | settlements_DE_Klarna_221112_221212.csv | 82eafcb9 | 9ce15ecf | 2023-07-26T18:11:14:09UTC | authorization | Ledgered | <color:green>Succeeded | GLJour-0000000015 | SCAP-Jour-0000000000598927 | [LegalEntity: SCAP, JournalNum: GLJour-0000000015, Voucher: SCAP-Jour-0000000000598927] | 2023-07-26T18:11:10:09UTC |
+            ===
+            =Klarna_SALE
+            |= internal_operation_unique_id |= file_name |= order_id |= Operation_type |= capture_date |= Phase |= status |= JournalNum |= Voucher |= description |= datetime |
+            | sc-file-out-000000000010 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Validation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000011 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Uplaoding| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:11:09UTC |
+            | sc-file-out-000000000012 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Transformation| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:12:09UTC |
+            | sc-file-out-000000000013 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Reconiliation| <color:green>Succeeded |  |  | [ReferenceFileName: SCAYLE_Pay_2022_12_11.csv] | 2023-07-26T18:11:13:09UTC |
+            | sc-file-out-000000000014 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Aggregation| <color:green>Succeeded |  |  | [AggregationId: 0000000000009183] | 2023-07-26T18:11:14:09UTC |
+            | sc-file-out-000000000015 | ettlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | ResultGeneration| <color:green>Succeeded |  |  |  | 2023-07-26T18:15:10:09UTC |
+            | sc-file-out-000000000016 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | ResultPersistance| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:16:09UTC |
+            | sc-file-out-000000000017 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | SendingOut| <color:red>Failed |  |  | [Destination: SCAYLEPayERP, ResponseCode: 429, ErrorMessage: "Too many requests"] | 2023-07-26T18:11:17:09UTC |
+            | sc-file-out-000000000018 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | SendingOut| <color:green>Succeeded |  |  | [[ReferenceOperation: sc-file-out-000000002],[OutputFileName: sc-file-out-000000000018.zip]] | 2023-07-26T18:11:18:09UTC |
+            | sc-file-out-000000000019 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | SALE | 2022-12-11T23:06:22.000Z | Ledgered | <color:green>Succeeded | GLJour-0000000016 | SCAP-Jour-0000000000598928 | [LegalEntity: SCAP, JournalNum: GLJour-0000000016, Voucher: SCAP-Jour-0000000000598928] | 2023-07-27T18:11:17:09UTC |
+            ===
+            =Klarna_Fee
+            |= internal_operation_unique_id |= file_name |= order_id |= Operation_type |= capture_date |= Phase |= status |= JournalNum |= Voucher |= description |= datetime |
+            | sc-file-out-000000000020 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Validation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000021 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Uplaoding| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:11:09UTC |
+            | sc-file-out-000000000022 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Transformation| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:12:09UTC |
+            | sc-file-out-000000000023 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Reconiliation| <color:green>Succeeded |  |  | [ReferenceFileName: SCAYLE_Pay_2022_12_11.csv] | 2023-07-26T18:11:13:09UTC |
+            | sc-file-out-000000000024 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Aggregation| <color:green>Succeeded |  |  | [AggregationId: 0000000000009184] | 2023-07-26T18:11:14:09UTC |
+            | sc-file-out-000000000025 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | ResultGeneration| <color:green>Succeeded |  |  |  | 2023-07-26T18:15:10:09UTC |
+            | sc-file-out-000000000026 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | ResultPersistance| <color:green>Succeeded |  |  |  | 2023-07-26T18:11:16:09UTC |
+            | sc-file-out-000000000027 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | SendingOut| <color:red>Failed |  |  | [Destination: SCAYLEPayERP, ResponseCode: 429, ErrorMessage: "Too many requests"] | 2023-07-26T18:11:17:09UTC |
+            | sc-file-out-000000000028 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | SendingOut| <color:green>Succeeded |  |  | [[ReferenceOperation: sc-file-out-000000003],[OutputFileName: sc-file-out-000000000028.zip]] | 2023-07-26T18:11:18:09UTC |
+            | sc-file-out-000000000029 | settlements_DE_klarna_221112_221212.csv | 8b2dea16-2ba3-456d-8203-f1f655a4e612 | FEE | 2022-12-11T23:06:22.000Z | Ledgered | <color:green>Succeeded | GLJour-0000000017 | SCAP-Jour-0000000000598929 | [LegalEntity: SCAP, JournalNum: GLJour-0000000017, Voucher: SCAP-Jour-0000000000598929] | 2023-07-27T18:11:17:09UTC |
+            ===
+            =MarketPlacePayout
+            |= internal_operation_unique_id |= file_name |= Operation_key |= transaction_key |= operation_timestamp |= operation_type |= Phase |= status |= JournalNum |= Voucher |= description |= datetime |
+            | sc-file-out-000000000030 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2022-12-09 18:15:16 | capture | Validation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000031 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | Uplaoding | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000032 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | Transformation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000033 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | Reconiliation | <color:green>Succeeded |  |  | [ReferenceFileName: SCAYLE_Pay_2022_12_11.csv] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000034 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | Aggregation | <color:green>Succeeded |  |  | [AggregationId: 0000000000009185] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000035 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | ResultGeneration | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000036 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | ResultPersistance | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000037 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | SendingOut | <color:green>Succeeded |  |  | [OutputFileName: sc-file-out-000000004.zip] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000038 | SCAYLE_PAY_Marketplace_Settlement_2022_12_12.csv | 493c887f | 9ce15ecf | 2023-07-26T18:11:14:09UTC | capture | Ledgered | <color:green>Succeeded | GLJour-0000000018 | SCAP-Jour-0000000000598930 | [LegalEntity: SCAP, JournalNum: GLJour-0000000018, Voucher: SCAP-Jour-0000000000598930] | 2023-07-26T18:11:10:09UTC |
+            ===
+            =MerchantPayout
+            |= internal_operation_unique_id |= file_name |= Operation_key |= transaction_key |= operation_timestamp |= operation_type |= Phase |= status |= JournalNum |= Voucher |= description |= datetime |
+            | sc-file-out-000000000039 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Validation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000040 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Uplaoding | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000041 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Transformation | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000042 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Reconiliation | <color:green>Succeeded |  |  | [ReferenceFileName: SCAYLE_Pay_2022_12_11.csv] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000043 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Aggregation | <color:green>Succeeded |  |  | [AggregationId: 0000000000009186] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000044 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | ResultGeneration | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000045 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | ResultPersistance | <color:green>Succeeded |  |  |  | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000046 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | SendingOut | <color:green>Succeeded |  |  | [OutputFileName: sc-file-out-000000005.zip] | 2023-07-26T18:11:10:09UTC |
+            | sc-file-out-000000000047 | SCAYLE_PAY_Merchant_Settlement_2022_12_12.csv | 338c8bd8 | 9ce15ecf | 2022-12-09 21:36:52 | capture | Ledgered | <color:green>Succeeded | GLJour-0000000019 | SCAP-Jour-0000000000598931 | [LegalEntity: SCAP, JournalNum: GLJour-0000000019, Voucher: SCAP-Jour-0000000000598931] | 2023-07-26T18:11:10:09UTC |
+            "
+        }
+        package Containers{
+            legend
+            =Transactions files containers
+            ----
+            CustomerBA_SetlmentFiles
+            ----
+            AYCommission_SettlmentFiles
+            ----
+            MerchantBA_SettlmentFiles
+            ----
+            ScayleEscrowBA_SettlmentFiles
+            ----
+            ScayleFeeBA_SettlmentFiles
+            ----
+            ScayleTrans_Files
+            end legend
+        }
+        database MainDatabase #Salmon as"
+                    Transformed data
+                    ===
+                    Reconciled data
+                    ===
+                    Aggregated data
+                    ===
+                    Master data
+                    == Refrence data ==
+                    Aggregation reference
+                    ==
+                    Cached data
+                    ===
+                    WaitedForMatching data
+                    ===
+                    Configuration data
+                    ===
+                    Paramaters data"
+        database Cache
+        package "DataIntegrationBlob" #MediumSpringGreen {
+            component [D365FinOpsERP_Outbound_Storage]
+        }
+    }
+    Package Banks #DarkTurquoise{
+        node SettlmentFilesCollectorAPI #Khaki{
+            portin settlment_file_portin
+            portout settlment_file_portout
+        }
+        node "UserBank" {
+            component [CustomerBA]
+        }
+        node "ScayleBank" {
+            package "ScayleBA.s" {
+                component [EscrowBA]
+                component [ScayleFeeCollectorBA]
+            }
+        }
+        node "MarketPlacesBanks" {
+            package "Marketplaces BA.s" {
+                package "AYMPC" {
+                    component [AYCommissionCollectorBA]
+                }
+            }
+        }
+        node "MerchantBank" {
+            node "Merchants BA.s" {
+                component [AdidasSalesCollectorBA]
+            }
+        }
+        node "KlarnaBank" {
+            node "Klarna BA.s" {
+                component [KlarnaFeeCollectorBA]
+            }
+        }
+    }
+    together D365Gang{
+        package D365FinanceERP #MediumSlateBlue{
+            package "AYHL Legal Entity" {
+                package SharedData {
+                    Package Parties{
+                        object Adidas {
+                            |= Property |= Value |
+                            | MainAccount | 11101110111 |
+                            | OffsetAccount | 99909990999 |
+                            | Address | Deutschland |
+                            | Currency | Euro |
+                            | FinancialDimensions | ["ShopKey", "Location", "Channel"] |
+                            | Roles | "["Customer", "Vendor"]" |
+                        }
+                    }
+                }
+                package "SPAY Legal Entity" as SPAYLE #SpringGreen {
+                    package "Data management framework" {
+                        node JournalsDataEntity
+                    }
+                    package GL {
+                        object Rules{
+                            * =Assets = Liabilities + Equity
+                            * Assets and Expenses: +Dr and -Cr
+                            * Liabilities and Revenues = -Dr and +Cr
+                            * Net Income = Revenue - Expenses
+                            * Net Income will be added to equity on closing
+                        }
+                        object ChartOfAccounts {
+                            = Assets(+Dr, -Cr)
+                            |_ Cash
+                            |_ Customer Receivable
+                            ---
+                            = Expenses(+Dr, -Cr))
+                            ---
+                            = Liabilities(-Dr, +Cr)
+                            |_ MP Service Payable
+                            |_ Tax Payable
+                            |_ Vendor Payable
+                            |_ Payment Service Payable
+                            ---
+                            = Equity(-Dr, +Cr)
+                            |_ Net income
+                            ---
+                            = Revenues(-Dr, +Cr)
+                            |_ Commission Revenue
+                        }
+                        node TrialBalance{
+                            object TrialBalance{
+                                =Assets
+                                |= |= Debit(+) |= Credit(-) |
+                                | Cash | $SC_Assets() |  |
+                                | **Total** | **$$SC_Assets() ** |
+
+                                \n
+                                =Liabilities
+                                |= |= Debit(-) |= Credit(+) |
+                                | Payment Service Payable | | $PSP.FeeValue |
+                                | MP Service Payable |  | $MP.CommissionValue |
+                                | Tax Payable |  | $SCAYLE.TaxValue |
+                                | Merchant Payable |  | $MERCHANT.SaleValue |
+                                | **Total** |  | **$SC_Liabilities() ** |
+
+                                \n
+                                =Equity
+                                |= |= Debit(-) |= Credit(+) |
+                                | Net Income |  | $SC_Equities() |
+                                | **Total** |  | **$SC_Equities()** |
+
+                            }
+                        }
+                    }
+                }
+                package "<color:white>AYMP Legal Entity" as AYMPLE #Black{
+                    legend
+                    Taking care of
+                    * Tax payable
+                    * Collecting commissions
+                    end legend
+                    package "Data management framework - AYMP" #CadetBlue{
+                        node JournalsDataEntity_AYMP
+                    }
+                    package GL_AYMPLE {
+                        object ChartOfAccounts_AYMPLE {
+                            = Assets(+Dr, -Cr)
+                            |_ Cash
+                            ---
+                            = Expenses(+Dr, -Cr))
+                            ---
+                            = Liabilities(-Dr, +Cr)
+                            |_ Tax Payable
+                            ---
+                            = Equity(-Dr, +Cr)
+                            |_ Net income
+                            ---
+                            = Revenues(-Dr, +Cr)
+                            |_ Commission Revenue
+                        }
+                        node TrialBalance_AYMPLE{
+                            object TrialBalance_AYMPLE{
+                                =Assets
+                                |= |= Debit(+) |= Credit(-) |
+                                | Cash | $MP_Assets() |  |
+                                | **Total** | **$MP_Assets() ** |
+
+                                \n
+                                =Liabilities
+                                |= |= Debit(-) |= Credit(+) |
+                                | Tax Payable |  | $MP.TaxValue |
+                                | **Total** |  | **$MP_Liabilities() ** |
+
+                                \n
+                                =Equity
+                                |= |= Debit(-) |= Credit(+) |
+                                | Net Income |  | $MP_Equities() |
+                                | **Total** |  | **$MP_Equities()** |
+
+                            }
+                        }
+                    }
+                }
+                legend
+                Taking care of
+                * SPAY-AYMP concolidation
+                * Reporting
+                end legend
+            }
+        }
+        package "DataIntegrator" #BurlyWood{
+            cloud RecurringIntegrator
+            frame "MasterData" {
+                component [MasterDataImporterAPI]
+            }
+        }
+    }
+    package ExternalSystems{
+        package ERPs{
+            object Nav {
+                <img:https://www.brightanalytics.eu/wp-content/uploads/Microsoft-Dynamics-NAV.png>
+            }
+            object SalesForce {
+                <img:https://www.salesforce.com/content/dam/web/en_is/www/images/campaigns/sem/sales-cloud/sf-logo.png>
+            }
+            object SAP{
+                <img:https://www.sap.com/dam/application/shared/logos/sap-logo-svg.svg/sap-logo-svg.svg>
+            }
+        }
+
+    }
+}
+together Estimations{
+    cloud CloudEstimations #Red{
+        object AzureAEstimations {
+            =Microsoft Azure Estimate
+            |= Service category |= Service type |= Custom name |= Region |= Description |= Estimated monthly cost |= Estimated upfront cost |
+            | Databases | Azure SQL Database | SCAYLE | Germany North | Single Database |  DTU Purchase Model |  Premium-series Tier |  P4: 500 DTUs |  500 GB included storage per DB |  1 Database(s) x 730 Hours |  500 GB Storage |  100 GB Point-In-Time Restore |  RA-GRS Back up Storage Redundancy |   17 x 100 GB Long Term Retention | €2.845 | 93 | €0 | 00 | |
+            | Compute | Azure Functions | EntryPoint | Central US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 |
+            | Databases | Azure Cosmos DB | Tracker | East US | Azure Cosmos DB for NoSQL (formerly Core) |  Standard provisioned throughput (manual) |  Always-free quantity disabled |  Single Region Write (Single-Master) - Germany North (Write region) |  500 RU/s x 730 Hours |  0 GB transactional storage |  Analytical storage disabled |  2 copies of periodic backup storage |  Dedicated gateway not enabled | €34 | 54 | €0 | 00 |
+            | Storage | Storage Accounts | Blob | Germany North | Data Lake Storage Gen2 |  Standard |  LRS Redundancy |  Cool Access Tier |  Hierarchical Namespace File Structure |  2 | 000 TB Capacity - Pay as you go |  Write operations: 4 MB x 10 operations |  Read operations: 4 MB x 10 operations |  10 Iterative read operations |  100 | 000 Archive High Priority Read |  10 Iterative write operations |  10 Other operations. 1 | 000 GB Data Retrieval |  1 | 000 GB Archive High Priority Retrieval |  1 | 000 GB Data Write | €24.238 | 31 | €0 | 00 |
+            | Compute | Azure Functions | Orchestrator | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 |
+            | Compute | Azure Functions | Validator | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 |
+            | Compute | Azure Functions | Transformer | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 |
+            | Compute | Azure Functions | Reconciler | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 |
+            | Compute | Azure Functions | ResultGenerator | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 | 
+            | Compute | Azure Functions | ResultSaver | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 | 
+            | Databases | Azure Cache for Redis | ScayleDBCache | Germany North | Premium tier; 1 Shard per Instance |  0 Additional Replicas per Shard |  1 P1 instances x 730 Hours |  Pay as you go | €478 | 19 | €0 | 00 | 
+            | Compute | Azure Functions | Uploader | West US | Consumption tier |  Pay as you go |  1536 MB memory |  100 milliseconds execution time |  17 | 000 | 000 executions/mo | €34 | 21 | €0 | 00 | 
+            | Support| | | Support| 0| €0| 00| 
+            Licensing Program: Microsoft Customer Agreement (MCA)
+            =Total €27,870.63 / month
+            This estimate was created at 8/5/2023 9:02:31 PM UTC.
+        }
+    }
+}
+together Links{
+    together CustomerLinks{
+        AlexTheCustomer -[bold]-> Checkout
+    }
+    together AYMPStoreLinks{
+        Checkout -[#Purple,dashed,thickness=10]-> PaymentCoordinator: Starting point
+    }
+    together ScayleAppLinkes{
+        PaymentCoordinator -[#DarkGreen,dashed,thickness=10]> Klarna
+        MonthlyBatchJob -d-> PayoutDistributor
+        PayoutDistributor ..> EscrowBalanceManagerAPI
+        EscrowBalanceManagerAPI .[#DarkGreen,dotted,thickness=10]d.> ScayleFeeCollectorBA
+        EscrowBalanceManagerAPI .[#DarkGreen,dotted,thickness=10]> AdidasSalesCollectorBA
+        EscrowBalanceManagerAPI .[#DarkGreen,dotted,thickness=10]> AYCommissionCollectorBA
+        TransCollectorAPI -[#DarkGreen,dashed,thickness=10]d-> EntryPoint: A
+        UniversalStatusDB -[#DarkGreen,dashed,thickness=10]-> ScayleAuditingControlCenter
+        SCAYLEPay -[#DarkGreen,dashed,thickness=10]l-> Cupa
+        'hidden links
+        Refrences -[hidden]d- TransCollectorAPI
+        PayoutSettlments -[hidden]u- Refrences
+        TransCollectorAPI -[hidden]d- PayoutSettlments
+        Cupa -[hidden]r- Checkout
+    }
+    together PSPLinks{
+        Klarna -[#DeepPink,dotted,thickness=10]l-> CustomerBA
+        Klarna -[#DeepPink,dotted,thickness=10]-> EscrowBA
+        Klarna -[#DeepPink,dotted,thickness=10]> KlarnaFeeCollectorBA
+
+        'hidden links
+        Klarna_Return_Issuer -[hidden]u- Klarna_Capture_Issuer
+        Klarna_Void_Issuer -[hidden]u- Klarna_Authorize_Issuer
+
+    }
+    together MiddlewareLinks{
+        EntryPoint -[#Purple,dashed,thickness=10]d-> Validate
+        ValidatorAPI -[#LightCyan,dashed,thickness=10]d-> Validated
+        UploaderAPI -[#Peru,dashed,thickness=10]d-> Uploaded
+        MasterDataDownloaderAPI -[#LightSeaGreen,dashed,thickness=10]d-> Downloaded
+        TransformerAPI -[#FFD600,dashed,thickness=10]d-> Transformed
+        ReconcilerAPI -[#00C853,dashed,thickness=10]d-> Reconciled
+        MatchFindingRules --> FileNamePatternMap
+        AggregatorAPI -[#FF6F00,dashed,thickness=10]d-> Aggregated
+        ResultGeneratorAPI -[#OliveDrab,dashed,thickness=10]d-> Generated
+        ResultSaverAPI -[#LightCoral,dashed,thickness=10]d-> Saved
+        Saved -[#Tomato,dashed,thickness=10]d-> D365FinOpsERP_Outbound_Storage
+        Log -[#Tomato,dashed,thickness=10]-> AuditingAPI
+        AuditingAPI -[#Chartreuse,dashed,thickness=20]d-> UniversalStatusDB: Just insert
+
+        UploaderAPI-[#Peru,dotted,thickness=1]u-> UniqueIDGeneratorAPI
+        TransformerAPI -[#FFD600,dotted,thickness=1]u-> UniqueIDGeneratorAPI
+        ReconcilerAPI -[#00C853,dotted,thickness=1]u-> UniqueIDGeneratorAPI
+        ResultSaverAPI -[#LightCoral,dotted,thickness=1]u-> UniqueIDGeneratorAPI
+
+        'hidden links
+        EntryPoint -[hidden]- Validator
+        Validator -[hidden]d- Uploader
+        Uploader -[hidden]d- MasterDataDownloader
+        MasterDataDownloader -[hidden]d- Transformer
+        Transformer -[hidden]d- Reconciler
+        Reconciler -[hidden]d- Aggregator
+        Aggregator -[hidden]d- ResultGenerator
+        ResultGenerator -[hidden]d- ResultSaver
+
+    }
+    together PersistanceLinks{
+        D365FinOpsERP_Outbound_Storage -[#MediumSpringGreen,dashed,thickness=10]-> RecurringIntegrator: K
+        Persistance -[hidden]d- D365FinanceERP
+    }
+    together BanksLinks{
+        EscrowBA ..> settlment_file_portin
+        AYCommissionCollectorBA ..> settlment_file_portin
+        ScayleFeeCollectorBA ..> settlment_file_portin
+        AdidasSalesCollectorBA ..> settlment_file_portin
+        settlment_file_portout -[#Cyan,dashed,thickness=10]u-> TransCollectorAPI: Settlment/\nTransaction files
+        KlarnaFeeCollectorBA .d.> settlment_file_portin
+        CustomerBA ..> settlment_file_portin
+    }
+    together D365GangLinks {
+        Parties -[#BlueViolet,dashed,thickness=10]u-> MasterDataImporterAPI
+        JournalsDataEntity_AYMP .[#BlueViolet,dashed,thickness=10]d.> Nav
+        JournalsDataEntity --> JournalsDataEntity_AYMP
+        JournalsDataEntity .[#BlueViolet,dashed,thickness=10]d.> Nav
+
+        'hidden links
+        Nav -[hidden]u- AYMPLE
+    }
+    together IntegratorLinks{
+        Cache <-r> MainDatabase
+        MasterDataImporterAPI <-[#Chocolate,dashed,thickness=10]l- Cache
+        RecurringIntegrator -[#Brown,dashed,thickness=10]-> JournalsDataEntity: L
+    }
+}
+@enduml

@@ -1,0 +1,55 @@
+@startuml
+
+class User {
+  +username: String
+  +email: String
+  +password: String
+  +register()
+  +login()
+  +logout()
+}
+
+class Admin {
+  +username: String
+  +email: String
+  +password: String
+  +createUser()
+  +deleteUser()
+  +updateUser()
+}
+
+class Product {
+  +productId: int
+  +name: String
+  +price: double
+  +description: String
+  +createProduct()
+  +deleteProduct()
+  +updateProduct()
+}
+
+class Order {
+  +orderId: int
+  +user: User
+  +products: Product[]
+  +totalAmount: double
+  +placeOrder()
+  +cancelOrder()
+}
+
+class Payment {
+  +paymentId: int
+  +order: Order
+  +amount: double
+  +status: String
+  +processPayment()
+}
+
+User "1" --> "1..*" Order
+Order "1" --> "1..*" Product
+Order "1" --> "0..1" Payment
+
+User "extends" <|-- Admin
+Payment "includes" -- Order
+
+@enduml

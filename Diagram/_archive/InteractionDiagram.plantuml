@@ -1,0 +1,26 @@
+@startuml
+title Interaction Overview Diagram
+
+skinparam linetype ortho
+
+User -> "Interaction 1": Action 1
+activate "Interaction 1"
+"Interaction 1" -> "Interaction 2": Action 2
+activate "Interaction 2"
+"Interaction 2" -> "Interaction 3": Action 3
+activate "Interaction 3"
+"Interaction 2" --> "Interaction 3": Condition 1
+"Interaction 2" -> "Interaction 4": Action 4
+activate "Interaction 4"
+"Interaction 3" -> "Interaction 4": Action 5
+"Interaction 3" --> "Interaction 2": Condition 2
+"Interaction 4" -> "Interaction 1": Action 6
+"Interaction 4" -> "Interaction 3": Action 7
+deactivate "Interaction 4"
+"Interaction 2" -> "Interaction 3": Action 8
+"Interaction 3" -> "Interaction 1": Action 9
+deactivate "Interaction 3"
+"Interaction 1" -> User: Response
+deactivate "Interaction 1"
+
+@enduml

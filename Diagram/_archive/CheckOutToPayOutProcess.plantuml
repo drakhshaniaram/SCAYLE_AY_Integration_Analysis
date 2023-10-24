@@ -1,0 +1,34 @@
+@startuml
+actor AlexTheCustomer #LightGreen
+
+AlexTheCustomer -> AYMPS: Sees Nike page
+AYMPS -> Nike: Orders RunningShoes
+Nike --> AYMPS: 90€ Item price+ 7% Commision + 3% Fee = 100€
+AYMPS -> AlexTheCustomer: 100€
+AlexTheCustomer -> AYMPS: Check out
+AYMPS -> SPSC: Handle payment
+SPSC -> PayPal: Auth. 100€ on Alex bank acc.
+PayPal -> SPSC: Authed(Settlment file)
+SPSC -> AYMPS: Authed(Settlment file)
+AYMPS -> Nike: Dispatch please
+Nike -> AYMPS: Dispatched
+AYMPS -> SPSC: Capture 100€
+SPSC -> PayPal: Capture 100€
+PayPal -> AlexBankAcc: Withdraw 100€
+' not necessary ------>
+AlexBankAcc --> AlexTheCustomer: Bank statement(-100€)
+SPSC_EcrowAcc --> SPSC: Bank statement(+100€)
+PayPal -> PayPalBankAcc: Deposit 1€
+' <--------------------
+PayPal -> SPSC_EcrowAcc: Deposit 99€
+PayPal -> SPSC: Captured(Settlment file)
+SPSC -> SPSC_ActualBankAcc: Deposit 2€ Fee(Invoice)
+SPSC_ActualBankAcc --> SPSC: Bank statement(+3€ - 1€ = 2€)
+SPSC -> AYMPS: Captured(Settlment file)
+AYMPS -> SPSC: Pay out 90€ to Adidas
+SPSC -> Adidas_BankAcc: Deposit 90€
+AYMPS -> SPSC: Pay me 7€ commision(Invoice)
+SPSC -> AYMPS_BankAcc: Deposit 7€
+AYMPS_BankAcc --> AYMPS: Bank statement(+7€)
+Nike -> AlexTheCustomer: DHL Package Delievered :)
+@enduml

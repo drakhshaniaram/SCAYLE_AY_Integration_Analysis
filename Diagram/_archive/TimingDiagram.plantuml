@@ -1,0 +1,31 @@
+@startuml
+title Human Growth Stages Timing Diagram
+
+skinparam linetype polyline
+
+participant "Infant" as Infant
+participant "Childhood" as Childhood
+participant "Adolescence" as Adolescence
+participant "Adulthood" as Adulthood
+participant "Elderly" as Elderly
+
+== Infant ==
+Infant --> Childhood: Age 0-12
+note right: Approximate duration: 12 years
+
+== Childhood ==
+Childhood --> Adolescence: Age 12-18
+note right: Approximate duration: 6 years
+
+== Adolescence ==
+Adolescence --> Adulthood: Age 18-25
+note right: Approximate duration: 7 years
+
+== Adulthood ==
+Adulthood --> Elderly: Age 25-60
+note right: Approximate duration: 35 years
+
+== Elderly ==
+Elderly --> end: Age 60 and above
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+title Use Case Diagram
+
+actor User
+actor Admin
+
+rectangle "UserManagement" {
+  usecase "Register"
+  usecase "Login"
+  usecase "ViewProfile"
+  usecase "UpdateProfile"
+}
+
+rectangle "ProductManagement" {
+  usecase "CreateProduct"
+  usecase "EditProduct"
+  usecase "DeleteProduct"
+  usecase "ViewProductDetails"
+  usecase "SearchProduct"
+}
+
+rectangle "OrderManagement" {
+  usecase "PlaceOrder"
+  usecase "CancelOrder"
+  usecase "ViewOrderHistory"
+}
+
+User --> Register
+User --> Login
+User --> ViewProfile
+User --> UpdateProfile
+User --> CreateProduct
+User --> EditProduct
+User --> DeleteProduct
+User --> ViewProductDetails
+User --> SearchProduct
+User --> PlaceOrder
+User --> CancelOrder
+User --> ViewOrderHistory
+
+Admin --> Login
+Admin --> CreateProduct
+Admin --> EditProduct
+Admin --> DeleteProduct
+Admin --> ViewProductDetails
+Admin --> SearchProduct
+Admin --> ViewOrderHistory
+
+@enduml
